@@ -25,6 +25,7 @@ class Snake{
         this.velocity.mult(5);
         this.headLocation.add(this.velocity);
         this.acceleration.mult(0);
+        //this.velocity.mult(0);
     }
 
     moveLeft() {
@@ -32,11 +33,13 @@ class Snake{
         v.rotate(-0.6);
         this.acceleration = v;
     }
+
     moveRight() {
         let v = createVector(this.velocity.x, this.velocity.y);
         v.rotate(0.6);
         this.acceleration = v;
     }
+
     isDead(){
         if(this.headLocation.x + 15 > width){
            return true;
@@ -54,7 +57,41 @@ class Snake{
         }
     }
 
+    see(food){
+        let leftV = createVector(this.velocity.x, this.velocity.y)
+        leftV.mult(300);
+        leftV.rotate(Math.PI/3);
+        let rightV = createVector(this.velocity.x, this.velocity.y);
+        rightV.rotate(5*Math.PI/3);
+        rightV.mult(300);
+
+        let snakeToFood = p5.Vector.sub(food.location, this.headLocation);
+        //let n = createVector(mouseX, mouseY);
+        //let snakeToFood = p5.Vector.sub(n, this.headLocation);
+        let is = 0;
+        if(p5.Vector.dot(p5.Vector.cross(leftV, snakeToFood), p5.Vector.cross(leftV, rightV)) >= 0 && p5.Vector.dot(p5.Vector.cross(rightV, snakeToFood), p5.Vector.cross(rightV, leftV)) >= 0){
+            is = 1;
+        }
+
+        console.log(is);
+
+
+        this.drawVector(this.headLocation, p5.Vector.add(leftV, this.headLocation), color(100,20,15));
+        this.drawVector(this.headLocation, p5.Vector.add(rightV, this.headLocation), color(100,90,15));
+
+    }
+
+    drawVector(base, vec, color){
+
+        stroke(color);
+        fill(color);
+        line(base.x, base.y, vec.x, vec.y);
+    }
 }
+
+
+
+
 
 class Food{
     constructor(){
@@ -103,6 +140,7 @@ function draw(){
         f = new Food();
     }
     background(0,0,0);
+    s.see(f);
     f.display();
     s.update();
     s.display();
