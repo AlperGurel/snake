@@ -1,3 +1,5 @@
+
+
 width =1920;
 height = 1080;
 
@@ -49,36 +51,47 @@ class Snake{
             return true;
         }
 
-        else if(this.headLocation.y + 15 > height){
+        else if(this.headLocation.y  > height){
             return true;
         }
-        else if(this.headLocation.y  - 15<0){
+        else if(this.headLocation.y <0){
             return true;
         }
     }
 
     see(food){
+
+        let see = 0;
+        let sees= [];
+        let vectors= [];
+        let snakeToFood = p5.Vector.sub(food.location, this.headLocation);
+
         let leftV = createVector(this.velocity.x, this.velocity.y)
         leftV.mult(300);
-        leftV.rotate(Math.PI/3);
-        let rightV = createVector(this.velocity.x, this.velocity.y);
-        rightV.rotate(5*Math.PI/3);
-        rightV.mult(300);
+        leftV.rotate(-Math.PI/3);
 
-        let snakeToFood = p5.Vector.sub(food.location, this.headLocation);
-        //let n = createVector(mouseX, mouseY);
-        //let snakeToFood = p5.Vector.sub(n, this.headLocation);
-        let is = 0;
-        if(p5.Vector.dot(p5.Vector.cross(leftV, snakeToFood), p5.Vector.cross(leftV, rightV)) >= 0 && p5.Vector.dot(p5.Vector.cross(rightV, snakeToFood), p5.Vector.cross(rightV, leftV)) >= 0){
-            is = 1;
+        vectors.push(createVector(leftV.x, leftV.y));
+        for(let y=0; y<12; y++) {
+            vectors.push(createVector(vectors[y].x, vectors[y].y));
+            vectors[y+1].rotate(Math.PI/18);
         }
 
-        console.log(is);
 
+        for(let i=0; i<12; i++)
+        {
+            see= this.checkSector(vectors[i], vectors[i+1], snakeToFood);
+            if(see)
+                sees.push(0);
+            else
+                sees.push(1);
+            sees.push(see);
+        }
 
-        this.drawVector(this.headLocation, p5.Vector.add(leftV, this.headLocation), color(100,20,15));
-        this.drawVector(this.headLocation, p5.Vector.add(rightV, this.headLocation), color(100,90,15));
+        for(let z=0; z<12; z++) {
+            this.drawVector(this.headLocation, p5.Vector.add(vectors[z], this.headLocation), color(20*z+80, 10*z, 9*z+20));
+        }
 
+        return sees;
     }
 
     drawVector(base, vec, color){
@@ -87,11 +100,18 @@ class Snake{
         fill(color);
         line(base.x, base.y, vec.x, vec.y);
     }
+
+    checkSector(leftV, rightV, snakeToFood){
+
+        let is = 0;
+        if(p5.Vector.dot(p5.Vector.cross(leftV, snakeToFood), p5.Vector.cross(leftV, rightV)) >= 0 && p5.Vector.dot(p5.Vector.cross(rightV, snakeToFood), p5.Vector.cross(rightV, leftV)) >= 0){
+            is = 1;
+        }
+        return is;
+    }
+
+
 }
-
-
-
-
 
 class Food{
     constructor(){
@@ -120,18 +140,103 @@ class Food{
 
 }
 
-let s, f;
+class Network{
+    constructor(sizes){
+            this.activations=[];
+            this.dist = gaussian(0, 1);
+            this.sizes = sizes;
+            this.num_layers = sizes.length;
+
+             this.b = this.sizes.map(x => {
+                let temp = [];
+                for(let i = 0;  i < x; i++){
+                    temp.push(this.dist.ppf(Math.random()));
+                    //temp.push(Math.random());
+                }
+                return temp;
+            });
+            this.b.shift();
+
+            this.w = this.sizes.map((x, index) => {
+                let tmp1 = [];
+                for(let i = 0; i < x; i++){
+                    let tmp2 = [];
+                    for(let j = 0; j <this.sizes[index-1]; j++ ){
+                        tmp2.push(this.dist.ppf(Math.random()));
+                        //tmp2.push(Math.random());
+                    }
+
+                    tmp1.push(tmp2);
+                }
+                return tmp1;
+            });
+            this.w.shift();
+
+
+    }
+    finalDecision(input){
+        this.activations = [];
+        this.activations.push(input);
+        for(let i=0; i<this.num_layers-1; i++){
+            this.activations.push(this.calculateInputs(this.activations[i], i));
+        }
+        let max=0;
+
+        if(this.activations[this.num_layers-1][0]>max)
+            max=this.activations[this.num_layers-1][0]
+        if (this.activations[this.num_layers-1][1]>max)
+            max=this.activations[this.num_layers-1][1];
+
+        if(max==this.activations[this.num_layers-1][0]){
+            turn("LEFT");
+        }
+
+        else
+        {
+            turn("RIGHT");
+        }
+
+
+
+        console.log(this.activations[3][0]);
+        console.log(this.activations[3][1]);
+    }
+    calculateInputs(inputs , katmanNo){
+        let temp=[];
+        for(let i=katmanNo; i<katmanNo+1; i++) {
+            for(let j = 0; j < this.b[i].length; j++ ){
+                temp.push(this.sigmoid(this.w[i][j], this.b[i][j], inputs));
+            }
+        }
+        return temp;
+
+
+    }
+    sigmoid(w,b, a){
+
+        let temp=math.dot(w,a)+b;
+        let sonuc = 1 / (1+Math.exp(temp*(-1)));
+        return sonuc;
+    }
+
+}
+//let net = new Network([24,16,16,2]);
+// console.log(net.b);
+// console.log(net.w);
+
+let s, f, net;
 
 function setup(){
     createCanvas(windowWidth -30, windowHeight-30);
     s = new Snake();
     f = new Food();
+    net = new Network([24,16,16,2]);
 
 }
 
 function draw(){
 
-
+    net = new Network([24,16,16,2]);
     if(s.isDead()) {
         fitnessList.push(s.fitness);
         s = new Snake();
@@ -140,10 +245,12 @@ function draw(){
         f = new Food();
     }
     background(0,0,0);
-    s.see(f);
+    net.finalDecision(s.see(f));
     f.display();
+
     s.update();
     s.display();
+
     textSize(32);
     text(s.fitness, 10, 30);
 
@@ -157,6 +264,13 @@ function keyPressed(){
     if(keyCode === RIGHT_ARROW){
         s.moveRight();
     }
+}
+
+function turn(decision){
+    if(decision=="LEFT")
+        s.moveLeft();
+    else if(decision=="RIGHT")
+        s.moveRight();
 }
 
 
