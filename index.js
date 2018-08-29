@@ -116,11 +116,16 @@ class Snake{
 class Food{
     constructor(){
         this.location = createVector(random(width), random(height));
+        this.velocity = createVector(Math.random(), Math.random());
     }
     display(){
         stroke(0);
         fill(175);
         ellipse(this.location.x, this.location.y, 15,15 );
+
+    }
+    update(){
+        this.location.add(this.velocity);
     }
     checkCollision(snake){
         let tempv = p5.Vector.sub(snake.headLocation, this.location);
@@ -135,6 +140,7 @@ class Food{
 
 
     }
+
 
 
 
@@ -230,13 +236,13 @@ function setup(){
     createCanvas(windowWidth -30, windowHeight-30);
     s = new Snake();
     f = new Food();
-    net = new Network([24,16,16,2]);
 
+    net = new Network([24,16,16,2]);
 }
 
 function draw(){
 
-    net = new Network([24,16,16,2]);
+
     if(s.isDead()) {
         fitnessList.push(s.fitness);
         s = new Snake();
@@ -246,6 +252,7 @@ function draw(){
     }
     background(0,0,0);
     net.finalDecision(s.see(f));
+    f.update();
     f.display();
 
     s.update();
