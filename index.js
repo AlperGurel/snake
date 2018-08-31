@@ -1,44 +1,73 @@
-
-
 width =1920;
 height = 1080;
 
 let fitnessList = [];
+let snakes=[];
+let foods=[];
+let newGens=[];
+const NETWORKSTRUCTURE =[24,16,16,2];
 
 class Snake{
 
-    constructor(){
-        this.headLocation = createVector(width/2, height/2);
+    constructor(brain){
+        if(brain === undefined) {
+            this.brain = new Network([24, 16, 16, 2]);
+        }
+        else
+            this.brain=brain;
+        this.dist = gaussian(0, 1);
+        this.headLocation = createVector(Math.random()*(width-30)+30, Math.random()*(height-30)+30);
+
         this.velocity = createVector(1, 0);
         this.acceleration = createVector(0,0);
         this.fitness=0;
+        this.health=50;
+        this.inputs = [];
+        for(let i = 0; i < 24; i++){
+            if(i%2===0){
+                this.inputs[i] = 1;
+            }
+            else{
+                this.inputs[i] = 0;
+            }
+        }
     }
 
-    display(){
+
+    display(snakeColor){
         stroke(1);
         //background(0,0,0);
-        fill(175);
+       
+            fill(175);
+
         ellipse(this.headLocation.x, this.headLocation.y, 30, 30)
     }
 
     update(){
         this.velocity.add(this.acceleration);
         this.velocity.normalize();
-        this.velocity.mult(5);
+        this.velocity.mult(10);
         this.headLocation.add(this.velocity);
         this.acceleration.mult(0);
+        this.turn(this.brain.finalDecision(this.inputs));
         //this.velocity.mult(0);
     }
 
+    turn(decision){
+        if(decision=="LEFT")
+            this.moveLeft();
+        else if(decision=="RIGHT")
+            this.moveRight();
+    }
     moveLeft() {
         let v = createVector(this.velocity.x, this.velocity.y);
-        v.rotate(-0.6);
+        v.rotate(-0.9);
         this.acceleration = v;
     }
 
     moveRight() {
         let v = createVector(this.velocity.x, this.velocity.y);
-        v.rotate(0.6);
+        v.rotate(0.9);
         this.acceleration = v;
     }
 
@@ -57,15 +86,17 @@ class Snake{
         else if(this.headLocation.y <0){
             return true;
         }
+        else
+            return false;
     }
 
-    see(food){
+    see(foods){
 
         let see = 0;
-        let sees= [];
-        let vectors= [];
-        let snakeToFood = p5.Vector.sub(food.location, this.headLocation);
 
+        let vectors= [];
+
+        let magnitude =0;
         let leftV = createVector(this.velocity.x, this.velocity.y)
         leftV.mult(300);
         leftV.rotate(-Math.PI/3);
@@ -76,22 +107,36 @@ class Snake{
             vectors[y+1].rotate(Math.PI/18);
         }
 
-
-        for(let i=0; i<12; i++)
-        {
-            see= this.checkSector(vectors[i], vectors[i+1], snakeToFood);
-            if(see)
-                sees.push(0);
+        for(let j = 0; j < 12; j++){
+            let flag = false;
+            for(let i = 0; i < foods.length; i++){
+                let snakeToFood = p5.Vector.sub(foods[i].location, this.headLocation);
+                magnitude = snakeToFood.mag();
+                magnitude= magnitude/(Math.sqrt(Math.pow(windowWidth,2)+Math.pow(windowHeight,2)));
+                see= this.checkSector(vectors[j], vectors[j+1], snakeToFood);
+                if(see){
+                    flag = true;
+                }
+            }
+            if(flag){
+                this.inputs[j*2]=0;
+                this.inputs[j*2+1] = magnitude;
+            }
             else
-                sees.push(1);
-            sees.push(see);
+            {
+                this.inputs[j*2]=1;
+                this.inputs[j*2+1]=0;
+            }
+
+
         }
 
-        for(let z=0; z<12; z++) {
-            this.drawVector(this.headLocation, p5.Vector.add(vectors[z], this.headLocation), color(20*z+80, 10*z, 9*z+20));
-        }
 
-        return sees;
+        //for(let z=0; z<12; z++) {
+        //    this.drawVector(this.headLocation, p5.Vector.add(vectors[z], this.headLocation), color(20*z+80, 10*z, 9*z+20));
+        //}
+
+
     }
 
     drawVector(base, vec, color){
@@ -115,12 +160,12 @@ class Snake{
 
 class Food{
     constructor(){
-        this.location = createVector(random(width), random(height));
-        this.velocity = createVector(Math.random(), Math.random());
+        this.location = createVector(Math.random()*width, Math.random()*height);
+        this.velocity = createVector(Math.random() - 0.5, Math.random()-0.5);
     }
     display(){
         stroke(0);
-        fill(175);
+        fill(color(30,150,150));
         ellipse(this.location.x, this.location.y, 15,15 );
 
     }
@@ -128,17 +173,36 @@ class Food{
         this.location.add(this.velocity);
     }
     checkCollision(snake){
-        let tempv = p5.Vector.sub(snake.headLocation, this.location);
-        let mg = tempv.mag();
-        mg = Math.abs(mg);
-        if(mg < 22.5){
-            snake.fitness++;
-            console.log(snake.fitness);
+        let collided = false;
+        for(let i = 0; i< snake.length; i++){
+            let tempv = p5.Vector.sub(snake[i].headLocation, this.location);
+            let mg = tempv.mag();
+            mg = Math.abs(mg);
+            if(mg < 22.5){
+                collided = true;
+                snake[i].fitness+=20;
+                snake[i].health+=20;
+                break;
+
+            }
+        }
+        return collided;
+    }
+    isDead(){
+        if(this.location.x + 15 > width){
             return true;
 
         }
+        else if(this.location.x - 15< 0){
+            return true;
+        }
 
-
+        else if(this.location.y  > height){
+            return true;
+        }
+        else if(this.location.y <0){
+            return true;
+        }
     }
 
 
@@ -156,8 +220,8 @@ class Network{
              this.b = this.sizes.map(x => {
                 let temp = [];
                 for(let i = 0;  i < x; i++){
-                    temp.push(this.dist.ppf(Math.random()));
-                    //temp.push(Math.random());
+                    //temp.push(this.dist.ppf(Math.random()));
+                    temp.push(Math.random()*10-5);
                 }
                 return temp;
             });
@@ -177,9 +241,8 @@ class Network{
                 return tmp1;
             });
             this.w.shift();
-
-
     }
+
     finalDecision(input){
         this.activations = [];
         this.activations.push(input);
@@ -194,18 +257,17 @@ class Network{
             max=this.activations[this.num_layers-1][1];
 
         if(max==this.activations[this.num_layers-1][0]){
-            turn("LEFT");
+            return ("LEFT");
         }
 
         else
         {
-            turn("RIGHT");
+            return ("RIGHT");
         }
 
 
 
-        console.log(this.activations[3][0]);
-        console.log(this.activations[3][1]);
+
     }
     calculateInputs(inputs , katmanNo){
         let temp=[];
@@ -226,59 +288,242 @@ class Network{
     }
 
 }
-//let net = new Network([24,16,16,2]);
-// console.log(net.b);
-// console.log(net.w);
 
-let s, f, net;
+class Genetic{
+    constructor(){
+         this.tempDna= [];
+         this.maxFitnessGen = {
+         };
+         this.count = 0;
+
+    }
+    makeChild(ancestors){
+        //maxfitnessa göre seç
+        // Gelen dna listesini sırala
+
+        let dnaList = [];
+        if(this.count == 0){
+            this.maxFitnessGen = ancestors[0];
+            this.count++;
+        }
+        
+        for(let i=0; i<ancestors.length; i++)
+        {
+            if(ancestors[i].fitness > this.maxFitnessGen.fitness){
+                this.maxFitnessGen = ancestors[i];
+            }
+            for(let j=i+1; j<ancestors.length; j++)
+                if(ancestors[i].fitness > ancestors[j].fitness){
+
+                }
+                else{
+                    let temp = ancestors[i];
+                    ancestors[i] = ancestors[j];
+                    ancestors[j] = temp;
+                }
+        }
+        // 2 adet parent getir
+        let parents = this.chooseParents((ancestors));
+
+
+
+        // gelen parentları dnaList'e açık şekilde al
+        for(let i=0; i<parents.length; i++) {
+            this.tempDna=[];
+            this.goDown(parents[i]);
+            dnaList.push(this.tempDna);
+        }
+
+        let child = this.crossingOver(dnaList);
+        let mutatedchild = this.mutateDna(child);   
+        
+        return this.brainChild(mutatedchild);
+    }
+    chooseParents(ancestors){
+       let chosenParents = [];
+       //this.ancestors=[];
+       for(let i=0; i<2; i++)
+       {   
+           if(i == 0 && ancestors[i].fitness > this.maxFitness){
+                chosenParents.push(ancestors[i]);
+           }
+           else if(i == 1 ){
+                chosenParents.push(ancestors[i])
+           }
+           else{
+                chosenParents.push(this.maxFitnessGen);
+           }
+           
+       }
+       return chosenParents;
+    }
+
+    goDown(a){
+        for(let i in a) {
+            if (i != "fitness") {
+                if (Array.isArray(a[i]))
+                    this.goDown(a[i])
+                else
+                    this.tempDna.push(a[i]);
+            }
+        }
+    }
+    getAncestors(index){
+        let ancestors = [];
+        for(let i=0; i<snakes.length; i++){
+                let tempGens= {};
+                tempGens.fitness = snakes[i].fitness;
+                tempGens.weight = snakes[i].brain.w;
+                tempGens.bias = snakes[i].brain.b;
+                ancestors.push(tempGens);
+        }
+        return gen.makeChild(ancestors);
+    }
+    crossingOver(dnaList){
+        /*
+        let w1 = [];
+        let b1 = [];
+        let w2 = [];
+        let b2 = [];
+
+        w1 = dnaList[0].slice(0, 336);
+        b1 = dnaList[0].slice(336, 353);
+        w2 = dnaList[1].slice(336, 672);
+        b2 = dnaList[1].slice(351, 368);
+        let childw = w1.concat(w2);
+        let childb = b1.concat(b2);
+        let child = childw.concat(childb);
+        return child;*/
+        let child =[];
+        for(let j=0; j<705; j+=10)
+        {
+            let number=Math.random();
+            for(let i=j; i<j+10;i++){      
+                if(number>0.5)
+                    child.push(dnaList[0][i]);
+                else
+                    child.push(dnaList[1][i]);
+            }
+        }
+        child.push(dnaList[0][705]);
+        return child;
+        
+    }
+    mutateDna(dna){
+        let dnaM = dna;
+        for(let i = 0; i<dnaM.length; i++){
+            let a = Math.random();
+            if(a >0.99 ){
+                let r = Math.random()*10 - 5;
+                dnaM[i] = r;
+            }
+        }
+        return dnaM;
+
+    }
+    brainChild(dna){
+        let dnaStructure = NETWORKSTRUCTURE;
+        let b= 672;
+        let w=0;
+        
+        let bNetwork = new Network(dnaStructure);
+        
+        bNetwork.b = bNetwork.sizes.map((x,index) => {
+            if(index!=0){
+                let temp = [];
+                for(let i = 0;  i < x; i++){
+                    temp.push(dna[b]);
+                    //temp.push(Math.random());
+                }
+                return temp;
+            }
+        });
+        bNetwork.b.shift();
+
+        bNetwork.w = bNetwork.sizes.map((x, index) => {
+            if(index!=0){
+                let tmp1 = [];
+                for(let i = 0; i < x; i++){
+                    let tmp2 = [];                 
+                        for(let j = 0; j <bNetwork.sizes[index-1]; j++ ){
+                            tmp2.push(dna[w]);
+                            w++;
+                            //tmp2.push(Math.random());
+                        }
+                    
+
+                    tmp1.push(tmp2);
+                }
+                return tmp1;
+            }
+        });
+        bNetwork.w.shift();
+        return bNetwork;
+    }
+   
+
+}
 
 function setup(){
+    mFitness=0;
     createCanvas(windowWidth -30, windowHeight-30);
-    s = new Snake();
-    f = new Food();
+    for(let i = 0; i < 1; i++){
+        food = new Food();
+        foods.push(food);
+    }
+    for(let i = 0; i < 10; i++){
+        snake = new Snake();
+        snakes.push(snake);
+    }
+    gen = new Genetic();
+    myflag=0;
 
-    net = new Network([24,16,16,2]);
+
 }
 
 function draw(){
-
-
-    if(s.isDead()) {
-        fitnessList.push(s.fitness);
-        s = new Snake();
-    }
-    if(f.checkCollision(s)){
-        f = new Food();
-    }
     background(0,0,0);
-    net.finalDecision(s.see(f));
-    f.update();
-    f.display();
-
-    s.update();
-    s.display();
-
-    textSize(32);
-    text(s.fitness, 10, 30);
-
-
-}
-
-function keyPressed(){
-    if(keyCode === LEFT_ARROW){
-        s.moveLeft();
+    for(let i = 0; i < snakes.length; i++){
+        if(snakes[i].fitness>mFitness)
+        {
+        mFitness=snakes[i].fitness;
+        
+        }
     }
-    if(keyCode === RIGHT_ARROW){
-        s.moveRight();
+    for(let i = 0; i < snakes.length; i++){
+        snakes[i].health-=0.1;
+        snakes[i].fitness+=0.0;
+        if(snakes[i].isDead() || snakes[i].health<=0 )
+        {
+            console.log(mFitness);
+            for(let k=0; k<10; k++)
+            snakes[i] = new Snake(gen.getAncestors(i));
+            
+            //todo genden çıkacak çocuğu yeni snake oluştururken kullanıcaz.
+        }
+        snakes[i].see(foods);
+        snakes[i].brain.finalDecision(snakes[i].inputs);
     }
+
+    for(let i = 0; i < snakes.length; i++){
+        snakes[i].update();
+        snakes[i].display();
+    }
+    for(let i = 0; i < foods.length; i++){
+        if(foods[i].checkCollision(snakes)) {
+            foods[i] = new Food();
+        }
+        if(foods[i].isDead())
+        {
+            foods[i]= new Food();
+        }
+        foods[i].update();
+        foods[i].display();
+    }
+
 }
 
-function turn(decision){
-    if(decision=="LEFT")
-        s.moveLeft();
-    else if(decision=="RIGHT")
-        s.moveRight();
-}
+
 
 
 
