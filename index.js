@@ -6,6 +6,8 @@ let snakes=[];
 let foods=[];
 let newGens=[];
 const NETWORKSTRUCTURE =[24,16,16,2];
+let cycle;
+let myShow=0;
 
 class Snake{
 
@@ -120,7 +122,7 @@ class Snake{
             }
             if(flag){
                 this.inputs[j*2]=0;
-                this.inputs[j*2+1] = magnitude;
+                this.inputs[j*2+1] = 1;
             }
             else
             {
@@ -161,7 +163,7 @@ class Snake{
 class Food{
     constructor(){
         this.location = createVector(Math.random()*width, Math.random()*height);
-        this.velocity = createVector(Math.random() - 0.5, Math.random()-0.5);
+        this.velocity = createVector(Math.random()*3 - 1.5, Math.random()*3-1.5);
     }
     display(){
         stroke(0);
@@ -190,17 +192,22 @@ class Food{
     }
     isDead(){
         if(this.location.x + 15 > width){
+           
             return true;
+        
 
         }
         else if(this.location.x - 15< 0){
+
             return true;
         }
 
         else if(this.location.y  > height){
+           
             return true;
         }
         else if(this.location.y <0){
+    
             return true;
         }
     }
@@ -465,6 +472,7 @@ class Genetic{
 }
 
 function setup(){
+    cycle=1;
     mFitness=0;
     createCanvas(windowWidth -30, windowHeight-30);
     for(let i = 0; i < 1; i++){
@@ -481,8 +489,10 @@ function setup(){
 
 }
 
+
 function draw(){
-    background(0,0,0);
+    
+    for(let i=0; i<cycle; i++){
     for(let i = 0; i < snakes.length; i++){
         if(snakes[i].fitness>mFitness)
         {
@@ -490,12 +500,13 @@ function draw(){
         
         }
     }
+    
     for(let i = 0; i < snakes.length; i++){
         snakes[i].health-=0.1;
         snakes[i].fitness+=0.0;
         if(snakes[i].isDead() || snakes[i].health<=0 )
         {
-            console.log(mFitness);
+            
             for(let k=0; k<10; k++)
             snakes[i] = new Snake(gen.getAncestors(i));
             
@@ -507,7 +518,7 @@ function draw(){
 
     for(let i = 0; i < snakes.length; i++){
         snakes[i].update();
-        snakes[i].display();
+        
     }
     for(let i = 0; i < foods.length; i++){
         if(foods[i].checkCollision(snakes)) {
@@ -518,9 +529,20 @@ function draw(){
             foods[i]= new Food();
         }
         foods[i].update();
-        foods[i].display();
+        
     }
-
+    }
+    //draw
+    
+    background(0,0,0);
+    textSize(32);
+    text(mFitness, 10, 30);
+    if(myShow==1){
+        for(let food of foods)
+        food.display();
+        for(let snake of snakes)
+        snake.display();
+    }
 }
 
 
