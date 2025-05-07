@@ -20,8 +20,8 @@ let windowWidth = 1400;
 let windowHeight = 800;
 
 const snakeCount = 20;
-const foodCount = 10;
-const healthDrop = 0.3;
+const foodCount = 1;
+const healthDrop = 0.02;
 const maxTrail = 50
 
 function dotProduct(v1, v2) {
@@ -85,7 +85,7 @@ class Snake{
     update(){
         this.velocity.add(this.acceleration);
         this.velocity.normalize();
-        this.velocity.mult(12);
+        this.velocity.mult(4);
         this.headLocation.add(this.velocity);
         this.acceleration.mult(0);
         this.turnUpdateCounter++;
@@ -93,7 +93,7 @@ class Snake{
         if(this.trailLocations.length > maxTrail){
             this.trailLocations.shift();    
         }
-        if(this.turnUpdateCounter%2===0){
+        if(this.turnUpdateCounter%4===0){
             this.turn(this.brain.finalDecision(this.inputs));
             this.turnUpdateCounter=0;
         }
@@ -236,8 +236,8 @@ class Food{
             mg = Math.abs(mg);
             if(mg < 22.5){
                 collided = true;
-                snake[i].fitness+=20;
-                snake[i].health+=20;
+                snake[i].fitness+=2;
+                snake[i].health+=2;
                 break;
 
             }
@@ -572,7 +572,7 @@ new p5((p5Instance) => {
             }
             for(let i = 0; i < foods.length; i++){
                 if(foods[i].checkCollision(snakes)) {
-                    foods[i] = new Food(p5Instance);
+                    // foods[i] = new Food(p5Instance);
                 }
                 if(foods[i].isDead())
                 {
