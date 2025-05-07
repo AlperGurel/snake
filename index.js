@@ -1,13 +1,31 @@
-width =1920;
-height = 1080;
+import gaussian from './gaussian-wrapper.js';
+
+let p;
+let width = 1920;
+let height = 1080;
 
 let fitnessList = [];
-let snakes=[];
-let foods=[];
-let newGens=[];
-const NETWORKSTRUCTURE =[24,16,16,2];
+let snakes = [];
+let foods = [];
+let newGens = [];
+const NETWORKSTRUCTURE = [24,16,16,2];
 let cycle;
-let myShow=0;
+let myShow = 1;
+let mFitness = 0;
+let food;
+let snake;
+let gen;
+let myflag;
+let windowWidth = 1000;
+let windowHeight = 1000;
+
+function dotProduct(v1, v2) {
+    let sum = 0;
+    for (let i = 0; i < v1.length; i++) {
+        sum += v1[i] * v2[i];
+    }
+    return sum;
+}
 
 class Snake{
 
@@ -18,10 +36,10 @@ class Snake{
         else
             this.brain=brain;
         this.dist = gaussian(0, 1);
-        this.headLocation = createVector(Math.random()*(width-30)+30, Math.random()*(height-30)+30);
+        this.headLocation = p.createVector(Math.random()*(width-30)+30, Math.random()*(height-30)+30);
 
-        this.velocity = createVector(1, 0);
-        this.acceleration = createVector(0,0);
+        this.velocity = p.createVector(1, 0);
+        this.acceleration = p.createVector(0,0);
         this.fitness=0;
         this.health=50;
         this.inputs = [];
@@ -37,12 +55,13 @@ class Snake{
 
 
     display(snakeColor){
-        stroke(1);
-        //background(0,0,0);
+        console.log("displaying snake at " + this.headLocation.x + " " + this.headLocation.y)
+        p.stroke(1);
+        //p.background(0,0,0);
        
-            fill(175);
+            p.fill(175);
 
-        ellipse(this.headLocation.x, this.headLocation.y, 30, 30)
+        p.ellipse(this.headLocation.x, this.headLocation.y, 30, 30)
     }
 
     update(){
@@ -62,13 +81,13 @@ class Snake{
             this.moveRight();
     }
     moveLeft() {
-        let v = createVector(this.velocity.x, this.velocity.y);
+        let v = p.createVector(this.velocity.x, this.velocity.y);
         v.rotate(-0.9);
         this.acceleration = v;
     }
 
     moveRight() {
-        let v = createVector(this.velocity.x, this.velocity.y);
+        let v = p.createVector(this.velocity.x, this.velocity.y);
         v.rotate(0.9);
         this.acceleration = v;
     }
@@ -99,13 +118,13 @@ class Snake{
         let vectors= [];
 
         let magnitude =0;
-        let leftV = createVector(this.velocity.x, this.velocity.y)
+        let leftV = p.createVector(this.velocity.x, this.velocity.y)
         leftV.mult(300);
         leftV.rotate(-Math.PI/3);
 
-        vectors.push(createVector(leftV.x, leftV.y));
+        vectors.push(p.createVector(leftV.x, leftV.y));
         for(let y=0; y<12; y++) {
-            vectors.push(createVector(vectors[y].x, vectors[y].y));
+            vectors.push(p.createVector(vectors[y].x, vectors[y].y));
             vectors[y+1].rotate(Math.PI/18);
         }
 
@@ -143,9 +162,9 @@ class Snake{
 
     drawVector(base, vec, color){
 
-        stroke(color);
-        fill(color);
-        line(base.x, base.y, vec.x, vec.y);
+        p.stroke(color);
+        p.fill(color);
+        p.line(base.x, base.y, vec.x, vec.y);
     }
 
     checkSector(leftV, rightV, snakeToFood){
@@ -162,13 +181,13 @@ class Snake{
 
 class Food{
     constructor(){
-        this.location = createVector(Math.random()*width, Math.random()*height);
-        this.velocity = createVector(Math.random()*3 - 1.5, Math.random()*3-1.5);
+        this.location = p.createVector(Math.random()*width, Math.random()*height);
+        this.velocity = p.createVector(Math.random()*3 - 1.5, Math.random()*3-1.5);
     }
     display(){
-        stroke(0);
-        fill(color(30,150,150));
-        ellipse(this.location.x, this.location.y, 15,15 );
+        p.stroke(0);
+        p.fill(p.color(30,150,150));
+        p.ellipse(this.location.x, this.location.y, 15,15 );
 
     }
     update(){
@@ -289,12 +308,14 @@ class Network{
     }
     sigmoid(w,b, a){
 
-        let temp=math.dot(w,a)+b;
+        let temp=dotProduct(w,a)+b;
         let sonuc = 1 / (1+Math.exp(temp*(-1)));
         return sonuc;
     }
 
 }
+
+
 
 class Genetic{
     constructor(){
@@ -471,10 +492,11 @@ class Genetic{
 
 }
 
-function setup(){
+function setup(p5Instance){
+    p = p5Instance;
     cycle=1;
     mFitness=0;
-    createCanvas(windowWidth -30, windowHeight-30);
+    p.createCanvas(windowWidth, windowHeight);
     for(let i = 0; i < 1; i++){
         food = new Food();
         foods.push(food);
@@ -485,13 +507,11 @@ function setup(){
     }
     gen = new Genetic();
     myflag=0;
-
-
 }
 
 
-function draw(){
-    
+function draw(p5Instance){
+    p = p5Instance;
     for(let i=0; i<cycle; i++){
     for(let i = 0; i < snakes.length; i++){
         if(snakes[i].fitness>mFitness)
@@ -534,9 +554,9 @@ function draw(){
     }
     //draw
     
-    background(0,0,0);
-    textSize(32);
-    text(mFitness, 10, 30);
+    p.background(0,0,0);
+    p.textSize(32);
+    p.text(mFitness, 10, 30);
     if(myShow==1){
         for(let food of foods)
         food.display();
@@ -546,7 +566,11 @@ function draw(){
 }
 
 
-
+new p5((p5Instance) => {
+    p = p5Instance;
+    setup(p5Instance);
+    p5Instance.draw = () => draw(p5Instance);
+});
 
 
 
