@@ -21,6 +21,8 @@ let windowHeight = 800;
 
 const snakeCount = 1;
 const foodCount = 0;
+const healthDrop = 0.2;
+const maxTrail = 50
 
 function dotProduct(v1, v2) {
     let sum = 0;
@@ -33,6 +35,7 @@ function dotProduct(v1, v2) {
 class Snake{
     p;
     turnUpdateCounter = 0;
+    trailLocations = [];
     constructor(brain, p){
         console.log("new snake")
         this.p = p;
@@ -47,7 +50,6 @@ class Snake{
         this.velocity = this.p.createVector(1, 0);
         // this.acceleration = this.p.createVector(0,0);
         this.acceleration = this.p.createVector(Math.random()*2-1, Math.random()*2-1);
-        console.log(this.acceleration);
         this.fitness=0;
         this.health=50;
         this.inputs = [];
@@ -62,22 +64,35 @@ class Snake{
     }
 
 
-    display(snakeColor){
-        this.p.stroke(1);
-        //p.background(0,0,0);
-       
-            this.p.fill(175);
-
-        this.p.ellipse(this.headLocation.x, this.headLocation.y, 30, 30)
+    display(){
+        let snakeColor = this.p.color(30, 30, 100);
+        this.p.fill(snakeColor);
+        const maxSize = 30;
+        const size = maxSize * (this.health / 50);
+        this.p.stroke(snakeColor);
+        this.p.strokeWeight(30);
+        this.p.point(this.headLocation.x, this.headLocation.y)
+        for(let i = 0; i < this.trailLocations.length; i++){
+            let alpha = this.p.lerp(0, 0.1, i / this.trailLocations.length);
+            snakeColor.setAlpha(alpha);
+            this.p.strokeWeight(this.p.lerp(15, 30, i / this.trailLocations.length));
+            this.p.stroke(snakeColor)
+            this.p.fill(snakeColor);
+            this.p.point(this.trailLocations[i].x, this.trailLocations[i].y);
+        }
     }
 
     update(){
         this.velocity.add(this.acceleration);
         this.velocity.normalize();
-        this.velocity.mult(5);
+        this.velocity.mult(3);
         this.headLocation.add(this.velocity);
         this.acceleration.mult(0);
         this.turnUpdateCounter++;
+        this.trailLocations.push(this.headLocation.copy());
+        if(this.trailLocations.length > maxTrail){
+            this.trailLocations.shift();    
+        }
         // if(this.turnUpdateCounter%100===0){
         //     this.turn(this.brain.finalDecision(this.inputs));
         //     this.turnUpdateCounter=0;
@@ -104,21 +119,17 @@ class Snake{
 
     isDead(){
         if(this.headLocation.x + 15 > width){
-            console.log("dead");
            return true;
 
         }
         else if(this.headLocation.x - 15< 0){
-            console.log("dead");
             return true;
         }
 
         else if(this.headLocation.y  > height){
-            console.log("dead");
             return true;
         }
         else if(this.headLocation.y <0){
-            console.log("dead");
             return true;
         }
         else
@@ -540,7 +551,7 @@ new p5((p5Instance) => {
             }
             
             for(let i = 0; i < snakes.length; i++){
-                snakes[i].health-=0.1;
+                snakes[i].health-=healthDrop;
                 snakes[i].fitness+=0.0;
                 if(snakes[i].isDead() || snakes[i].health<=0 )
                 {
