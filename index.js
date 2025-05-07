@@ -19,8 +19,8 @@ let myflag;
 let windowWidth = 1400;
 let windowHeight = 800;
 
-const snakeCount = 1;
-const foodCount = 1;
+const snakeCount = 20;
+const foodCount = 10;
 const healthDrop = 0.2;
 const maxTrail = 50
 
@@ -45,8 +45,8 @@ class Snake{
         else
             this.brain=brain;
         this.dist = gaussian(0, 1);
-        // this.headLocation = this.p.createVector(Math.random()*(width-30)+30, Math.random()*(height-30)+30);
-        this.headLocation = this.p.createVector(width/2, height/2);
+        this.headLocation = this.p.createVector(Math.random()*(width-30)+30, Math.random()*(height-30)+30);
+        // this.headLocation = this.p.createVector(width/2, height/2);
         this.velocity = this.p.createVector(1, 0);
         // this.acceleration = this.p.createVector(0,0);
         this.acceleration = this.p.createVector(Math.random()*2-1, Math.random()*2-1);
@@ -148,7 +148,7 @@ class Snake{
         leftV.rotate(-Math.PI/3);
 
         vectors.push(this.p.createVector(leftV.x, leftV.y));
-        for(let y=0; y<12; y++) {
+        for(let y=0; y<snakeCount; y++) {
             vectors.push(this.p.createVector(vectors[y].x, vectors[y].y));
             vectors[y+1].rotate(Math.PI/18);
         }
