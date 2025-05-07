@@ -45,8 +45,9 @@ class Snake{
         // this.headLocation = this.p.createVector(Math.random()*(width-30)+30, Math.random()*(height-30)+30);
         this.headLocation = this.p.createVector(width/2, height/2);
         this.velocity = this.p.createVector(1, 0);
-        this.acceleration = this.p.createVector(0,0);
-        // this.acceleration = this.p.createVector(Math.random()*2-1, Math.random()*2-1);
+        // this.acceleration = this.p.createVector(0,0);
+        this.acceleration = this.p.createVector(Math.random()*2-1, Math.random()*2-1);
+        console.log(this.acceleration);
         this.fitness=0;
         this.health=50;
         this.inputs = [];
