@@ -20,7 +20,7 @@ let windowWidth = 1400;
 let windowHeight = 800;
 
 const snakeCount = 1;
-const foodCount = 0;
+const foodCount = 1;
 const healthDrop = 0.2;
 const maxTrail = 50
 
@@ -212,9 +212,15 @@ class Food{
         this.velocity = p.createVector(Math.random()*3 - 1.5, Math.random()*3-1.5);
     }
     display(){
-        this.p.stroke(0);
-        this.p.fill(this.p.color(30,150,150));
-        this.p.ellipse(this.location.x, this.location.y, 15,15 );
+        this.p.stroke(11, 90, 70);
+        const foodColor = this.p.color(50,0,10);
+        foodColor.setAlpha(1);
+        this.p.fill(foodColor);
+        this.p.strokeWeight(20);
+        this.p.rectMode(this.p.CENTER);
+        this.p.rect(this.location.x, this.location.y, 3, 3);
+
+        // this.p.ellipse(this.location.x, this.location.y, 15,15 );
 
     }
     update(){
@@ -588,10 +594,12 @@ new p5((p5Instance) => {
         p5Instance.textSize(32);
         // p5Instance.text(mFitness, 10, 30);
         if(myShow==1){
-            for(let food of foods)
-            food.display();
-            for(let snake of snakes)
-            snake.display();
+            for(let snake of snakes){
+                snake.display();
+            }
+            for(let food of foods){
+                food.display();
+            }
         }
     }   
     // setup(p5Instance);
