@@ -215,7 +215,7 @@ class Food{
            
             return true;
         
-
+// step 1
         }
         else if(this.location.x - 15< 0){
 
