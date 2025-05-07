@@ -70,12 +70,12 @@ class Snake{
         const maxSize = 30;
         const size = maxSize * (this.health / 50);
         this.p.stroke(snakeColor);
-        this.p.strokeWeight(30);
+        this.p.strokeWeight(size);
         this.p.point(this.headLocation.x, this.headLocation.y)
         for(let i = 0; i < this.trailLocations.length; i++){
             let alpha = this.p.lerp(0, 0.1, i / this.trailLocations.length);
             snakeColor.setAlpha(alpha);
-            this.p.strokeWeight(this.p.lerp(15, 30, i / this.trailLocations.length));
+            this.p.strokeWeight(this.p.lerp(15, size, i / this.trailLocations.length));
             this.p.stroke(snakeColor)
             this.p.fill(snakeColor);
             this.p.point(this.trailLocations[i].x, this.trailLocations[i].y);
@@ -85,7 +85,7 @@ class Snake{
     update(){
         this.velocity.add(this.acceleration);
         this.velocity.normalize();
-        this.velocity.mult(3);
+        this.velocity.mult(2);
         this.headLocation.add(this.velocity);
         this.acceleration.mult(0);
         this.turnUpdateCounter++;
@@ -93,7 +93,7 @@ class Snake{
         if(this.trailLocations.length > maxTrail){
             this.trailLocations.shift();    
         }
-        // if(this.turnUpdateCounter%100===0){
+        // if(this.turnUpdateCounter%30===0){
         //     this.turn(this.brain.finalDecision(this.inputs));
         //     this.turnUpdateCounter=0;
         // }
