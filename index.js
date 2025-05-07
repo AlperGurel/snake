@@ -19,6 +19,9 @@ let myflag;
 let windowWidth = 1400;
 let windowHeight = 800;
 
+const snakeCount = 1;
+const foodCount = 0;
+
 function dotProduct(v1, v2) {
     let sum = 0;
     for (let i = 0; i < v1.length; i++) {
@@ -29,7 +32,9 @@ function dotProduct(v1, v2) {
 
 class Snake{
     p;
+    turnUpdateCounter = 0;
     constructor(brain, p){
+        console.log("new snake")
         this.p = p;
         if(brain === undefined) {
             this.brain = new Network([24, 16, 16, 2]);
@@ -41,10 +46,11 @@ class Snake{
         this.headLocation = this.p.createVector(width/2, height/2);
         this.velocity = this.p.createVector(1, 0);
         this.acceleration = this.p.createVector(0,0);
+        // this.acceleration = this.p.createVector(Math.random()*2-1, Math.random()*2-1);
         this.fitness=0;
         this.health=50;
         this.inputs = [];
-        for(let i = 0; i < 24; i++){
+        for(let i = 0; i < snakeCount*2; i++){
             if(i%2===0){
                 this.inputs[i] = 1;
             }
@@ -67,10 +73,14 @@ class Snake{
     update(){
         this.velocity.add(this.acceleration);
         this.velocity.normalize();
-        this.velocity.mult(14);
+        this.velocity.mult(5);
         this.headLocation.add(this.velocity);
         this.acceleration.mult(0);
-        this.turn(this.brain.finalDecision(this.inputs));
+        this.turnUpdateCounter++;
+        // if(this.turnUpdateCounter%100===0){
+        //     this.turn(this.brain.finalDecision(this.inputs));
+        //     this.turnUpdateCounter=0;
+        // }
     }
 
     turn(decision){
@@ -93,17 +103,21 @@ class Snake{
 
     isDead(){
         if(this.headLocation.x + 15 > width){
+            console.log("dead");
            return true;
 
         }
         else if(this.headLocation.x - 15< 0){
+            console.log("dead");
             return true;
         }
 
         else if(this.headLocation.y  > height){
+            console.log("dead");
             return true;
         }
         else if(this.headLocation.y <0){
+            console.log("dead");
             return true;
         }
         else
@@ -127,7 +141,7 @@ class Snake{
             vectors[y+1].rotate(Math.PI/18);
         }
 
-        for(let j = 0; j < 12; j++){
+        for(let j = 0; j < snakeCount; j++){
             let flag = false;
             for(let i = 0; i < foods.length; i++){
                 let snakeToFood = p5.Vector.sub(foods[i].location, this.headLocation);
@@ -494,8 +508,7 @@ class Genetic{
 }
 
 
-const snakeCount = 1;
-const foodCount = 0;
+
 new p5((p5Instance) => {
     // p = p5Instance;
     p5Instance.setup = () => {
@@ -515,7 +528,7 @@ new p5((p5Instance) => {
         myflag=0;
     }
     p5Instance.draw = () => {
-        p5Instance.frameRate(10);
+        // p5Instance.frameRate(10);
         for(let i=0; i<cycle; i++){
             for(let i = 0; i < snakes.length; i++){
                 if(snakes[i].fitness>mFitness)
