@@ -20,7 +20,7 @@ let windowWidth = 1400;
 let windowHeight = 800;
 
 const snakeCount = 20;
-const foodCount = 10;
+const foodCount = 1;
 const healthDrop = 0.2;
 const maxTrail = 50
 
@@ -36,8 +36,8 @@ class Snake{
     p;
     turnUpdateCounter = 0;
     trailLocations = [];
+    inputs = [];
     constructor(brain, p){
-        console.log("new snake")
         this.p = p;
         if(brain === undefined) {
             this.brain = new Network([24, 16, 16, 2]);
@@ -85,7 +85,7 @@ class Snake{
     update(){
         this.velocity.add(this.acceleration);
         this.velocity.normalize();
-        this.velocity.mult(2);
+        this.velocity.mult(25);
         this.headLocation.add(this.velocity);
         this.acceleration.mult(0);
         this.turnUpdateCounter++;
@@ -97,6 +97,8 @@ class Snake{
         //     this.turn(this.brain.finalDecision(this.inputs));
         //     this.turnUpdateCounter=0;
         // }
+        this.turn(this.brain.finalDecision(this.inputs));
+        this.turnUpdateCounter=0;
     }
 
     turn(decision){
@@ -303,7 +305,6 @@ class Network{
     }
 
     finalDecision(input){
-        this.activations = [];
         this.activations.push(input);
         for(let i=0; i<this.num_layers-1; i++){
             this.activations.push(this.calculateInputs(this.activations[i], i));
@@ -317,17 +318,12 @@ class Network{
 
         if(max==this.activations[this.num_layers-1][0]){
             return ("LEFT");
-        }
-
-        else
-        {
+        } else {
             return ("RIGHT");
         }
-
-
-
-
     }
+
+
     calculateInputs(inputs , katmanNo){
         let temp=[];
         for(let i=katmanNo; i<katmanNo+1; i++) {
@@ -336,11 +332,9 @@ class Network{
             }
         }
         return temp;
-
-
     }
-    sigmoid(w,b, a){
 
+    sigmoid(w,b, a){
         let temp=dotProduct(w,a)+b;
         let sonuc = 1 / (1+Math.exp(temp*(-1)));
         return sonuc;
