@@ -1,8 +1,8 @@
 import gaussian from './gaussian-wrapper.js';
 
 let p;
-let width = 1920;
-let height = 1080;
+let width = 1400;
+let height = 800;
 
 let fitnessList = [];
 let snakes = [];
@@ -16,8 +16,8 @@ let food;
 let snake;
 let gen;
 let myflag;
-let windowWidth = 1000;
-let windowHeight = 1000;
+let windowWidth = 1400;
+let windowHeight = 800;
 
 function dotProduct(v1, v2) {
     let sum = 0;
@@ -28,18 +28,19 @@ function dotProduct(v1, v2) {
 }
 
 class Snake{
-
-    constructor(brain){
+    p;
+    constructor(brain, p){
+        this.p = p;
         if(brain === undefined) {
             this.brain = new Network([24, 16, 16, 2]);
         }
         else
             this.brain=brain;
         this.dist = gaussian(0, 1);
-        this.headLocation = p.createVector(Math.random()*(width-30)+30, Math.random()*(height-30)+30);
-
-        this.velocity = p.createVector(1, 0);
-        this.acceleration = p.createVector(0,0);
+        // this.headLocation = this.p.createVector(Math.random()*(width-30)+30, Math.random()*(height-30)+30);
+        this.headLocation = this.p.createVector(width/2, height/2);
+        this.velocity = this.p.createVector(1, 0);
+        this.acceleration = this.p.createVector(0,0);
         this.fitness=0;
         this.health=50;
         this.inputs = [];
@@ -55,23 +56,21 @@ class Snake{
 
 
     display(snakeColor){
-        console.log("displaying snake at " + this.headLocation.x + " " + this.headLocation.y)
-        p.stroke(1);
+        this.p.stroke(1);
         //p.background(0,0,0);
        
-            p.fill(175);
+            this.p.fill(175);
 
-        p.ellipse(this.headLocation.x, this.headLocation.y, 30, 30)
+        this.p.ellipse(this.headLocation.x, this.headLocation.y, 30, 30)
     }
 
     update(){
-        this.velocity.add(this.acceleration);
-        this.velocity.normalize();
-        this.velocity.mult(10);
-        this.headLocation.add(this.velocity);
-        this.acceleration.mult(0);
-        this.turn(this.brain.finalDecision(this.inputs));
-        //this.velocity.mult(0);
+        // this.velocity.add(this.acceleration);
+        // this.velocity.normalize();
+        // this.velocity.mult(14);
+        // this.headLocation.add(this.velocity);
+        // this.acceleration.mult(0);
+        // this.turn(this.brain.finalDecision(this.inputs));
     }
 
     turn(decision){
@@ -81,13 +80,13 @@ class Snake{
             this.moveRight();
     }
     moveLeft() {
-        let v = p.createVector(this.velocity.x, this.velocity.y);
+        let v = this.p.createVector(this.velocity.x, this.velocity.y);
         v.rotate(-0.9);
         this.acceleration = v;
     }
 
     moveRight() {
-        let v = p.createVector(this.velocity.x, this.velocity.y);
+        let v = this.p.createVector(this.velocity.x, this.velocity.y);
         v.rotate(0.9);
         this.acceleration = v;
     }
@@ -118,13 +117,13 @@ class Snake{
         let vectors= [];
 
         let magnitude =0;
-        let leftV = p.createVector(this.velocity.x, this.velocity.y)
+        let leftV = this.p.createVector(this.velocity.x, this.velocity.y)
         leftV.mult(300);
         leftV.rotate(-Math.PI/3);
 
-        vectors.push(p.createVector(leftV.x, leftV.y));
+        vectors.push(this.p.createVector(leftV.x, leftV.y));
         for(let y=0; y<12; y++) {
-            vectors.push(p.createVector(vectors[y].x, vectors[y].y));
+            vectors.push(this.p.createVector(vectors[y].x, vectors[y].y));
             vectors[y+1].rotate(Math.PI/18);
         }
 
@@ -162,9 +161,9 @@ class Snake{
 
     drawVector(base, vec, color){
 
-        p.stroke(color);
-        p.fill(color);
-        p.line(base.x, base.y, vec.x, vec.y);
+        this.p.stroke(color);
+        this.p.fill(color);
+        this.p.line(base.x, base.y, vec.x, vec.y);
     }
 
     checkSector(leftV, rightV, snakeToFood){
@@ -180,14 +179,16 @@ class Snake{
 }
 
 class Food{
-    constructor(){
+    p;
+    constructor(p){
+        this.p = p;
         this.location = p.createVector(Math.random()*width, Math.random()*height);
         this.velocity = p.createVector(Math.random()*3 - 1.5, Math.random()*3-1.5);
     }
     display(){
-        p.stroke(0);
-        p.fill(p.color(30,150,150));
-        p.ellipse(this.location.x, this.location.y, 15,15 );
+        this.p.stroke(0);
+        this.p.fill(this.p.color(30,150,150));
+        this.p.ellipse(this.location.x, this.location.y, 15,15 );
 
     }
     update(){
@@ -492,84 +493,84 @@ class Genetic{
 
 }
 
-function setup(p5Instance){
-    p = p5Instance;
-    cycle=1;
-    mFitness=0;
-    p.createCanvas(windowWidth, windowHeight);
-    for(let i = 0; i < 1; i++){
-        food = new Food();
-        foods.push(food);
-    }
-    for(let i = 0; i < 10; i++){
-        snake = new Snake();
-        snakes.push(snake);
-    }
-    gen = new Genetic();
-    myflag=0;
-}
 
-
-function draw(p5Instance){
-    p = p5Instance;
-    for(let i=0; i<cycle; i++){
-    for(let i = 0; i < snakes.length; i++){
-        if(snakes[i].fitness>mFitness)
-        {
-        mFitness=snakes[i].fitness;
-        
-        }
-    }
-    
-    for(let i = 0; i < snakes.length; i++){
-        snakes[i].health-=0.1;
-        snakes[i].fitness+=0.0;
-        if(snakes[i].isDead() || snakes[i].health<=0 )
-        {
-            
-            for(let k=0; k<10; k++)
-            snakes[i] = new Snake(gen.getAncestors(i));
-            
-            //todo genden çıkacak çocuğu yeni snake oluştururken kullanıcaz.
-        }
-        snakes[i].see(foods);
-        snakes[i].brain.finalDecision(snakes[i].inputs);
-    }
-
-    for(let i = 0; i < snakes.length; i++){
-        snakes[i].update();
-        
-    }
-    for(let i = 0; i < foods.length; i++){
-        if(foods[i].checkCollision(snakes)) {
-            foods[i] = new Food();
-        }
-        if(foods[i].isDead())
-        {
-            foods[i]= new Food();
-        }
-        foods[i].update();
-        
-    }
-    }
-    //draw
-    
-    p.background(0,0,0);
-    p.textSize(32);
-    p.text(mFitness, 10, 30);
-    if(myShow==1){
-        for(let food of foods)
-        food.display();
-        for(let snake of snakes)
-        snake.display();
-    }
-}
-
-
+const snakeCount = 1;
+const foodCount = 0;
 new p5((p5Instance) => {
-    p = p5Instance;
-    setup(p5Instance);
-    p5Instance.draw = () => draw(p5Instance);
+    // p = p5Instance;
+    p5Instance.setup = () => {
+        p5Instance.createCanvas(windowWidth, windowHeight);
+        p5Instance.colorMode(p5Instance.HSL, 360, 100, 100)
+        cycle=1;
+        mFitness=0;
+        for(let i = 0; i < foodCount; i++){
+            food = new Food(p5Instance);
+            foods.push(food);
+        }
+        for(let i = 0; i < snakeCount; i++){
+            snake = new Snake(undefined, p5Instance);
+            snakes.push(snake);
+        }
+        gen = new Genetic();
+        myflag=0;
+    }
+    p5Instance.draw = () => {
+        p5Instance.frameRate(10);
+        for(let i=0; i<cycle; i++){
+            for(let i = 0; i < snakes.length; i++){
+                if(snakes[i].fitness>mFitness)
+                {
+                mFitness=snakes[i].fitness;
+                
+                }
+            }
+            
+            for(let i = 0; i < snakes.length; i++){
+                snakes[i].health-=0.1;
+                snakes[i].fitness+=0.0;
+                if(snakes[i].isDead() || snakes[i].health<=0 )
+                {
+                    
+                    for(let k=0; k<snakeCount; k++)
+                    snakes[i] = new Snake(gen.getAncestors(i), p5Instance);
+                    
+                    //todo genden çıkacak çocuğu yeni snake oluştururken kullanıcaz.
+                }
+                snakes[i].see(foods);
+                snakes[i].brain.finalDecision(snakes[i].inputs);
+            }
+        
+            for(let i = 0; i < snakes.length; i++){
+                snakes[i].update();
+                
+            }
+            for(let i = 0; i < foods.length; i++){
+                if(foods[i].checkCollision(snakes)) {
+                    foods[i] = new Food(p5Instance);
+                }
+                if(foods[i].isDead())
+                {
+                    foods[i]= new Food(p5Instance);
+                }
+                foods[i].update();
+                
+            }
+            }
+
+
+
+        p5Instance.background(160, 90, 8);
+        p5Instance.textSize(32);
+        // p5Instance.text(mFitness, 10, 30);
+        if(myShow==1){
+            for(let food of foods)
+            food.display();
+            for(let snake of snakes)
+            snake.display();
+        }
+    }   
+    // setup(p5Instance);
+    // p5Instance.draw = () => draw(p5Instance);
 });
 
 
