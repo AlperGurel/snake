@@ -20,8 +20,8 @@ let windowWidth = 1400;
 let windowHeight = 800;
 
 const snakeCount = 20;
-const foodCount = 1;
-const healthDrop = 0.2;
+const foodCount = 10;
+const healthDrop = 0.3;
 const maxTrail = 50
 
 function dotProduct(v1, v2) {
@@ -85,7 +85,7 @@ class Snake{
     update(){
         this.velocity.add(this.acceleration);
         this.velocity.normalize();
-        this.velocity.mult(25);
+        this.velocity.mult(12);
         this.headLocation.add(this.velocity);
         this.acceleration.mult(0);
         this.turnUpdateCounter++;
@@ -93,12 +93,12 @@ class Snake{
         if(this.trailLocations.length > maxTrail){
             this.trailLocations.shift();    
         }
-        // if(this.turnUpdateCounter%30===0){
-        //     this.turn(this.brain.finalDecision(this.inputs));
-        //     this.turnUpdateCounter=0;
-        // }
-        this.turn(this.brain.finalDecision(this.inputs));
-        this.turnUpdateCounter=0;
+        if(this.turnUpdateCounter%2===0){
+            this.turn(this.brain.finalDecision(this.inputs));
+            this.turnUpdateCounter=0;
+        }
+        // this.turn(this.brain.finalDecision(this.inputs));
+        // this.turnUpdateCounter=0;
     }
 
     turn(decision){
@@ -305,6 +305,7 @@ class Network{
     }
 
     finalDecision(input){
+        this.activations=[];
         this.activations.push(input);
         for(let i=0; i<this.num_layers-1; i++){
             this.activations.push(this.calculateInputs(this.activations[i], i));
@@ -586,7 +587,7 @@ new p5((p5Instance) => {
 
         p5Instance.background(160, 90, 18);
         p5Instance.textSize(32);
-        // p5Instance.text(mFitness, 10, 30);
+        p5Instance.text(mFitness, 10, 30);
         if(myShow==1){
             for(let snake of snakes){
                 snake.display();
