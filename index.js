@@ -65,12 +65,12 @@ class Snake{
     }
 
     update(){
-        // this.velocity.add(this.acceleration);
-        // this.velocity.normalize();
-        // this.velocity.mult(14);
-        // this.headLocation.add(this.velocity);
-        // this.acceleration.mult(0);
-        // this.turn(this.brain.finalDecision(this.inputs));
+        this.velocity.add(this.acceleration);
+        this.velocity.normalize();
+        this.velocity.mult(14);
+        this.headLocation.add(this.velocity);
+        this.acceleration.mult(0);
+        this.turn(this.brain.finalDecision(this.inputs));
     }
 
     turn(decision){
