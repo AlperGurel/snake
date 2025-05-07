@@ -559,7 +559,7 @@ new p5((p5Instance) => {
 
 
 
-        p5Instance.background(160, 90, 8);
+        p5Instance.background(160, 90, 18);
         p5Instance.textSize(32);
         // p5Instance.text(mFitness, 10, 30);
         if(myShow==1){
